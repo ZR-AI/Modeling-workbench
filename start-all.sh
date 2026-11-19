@@ -13,15 +13,10 @@ fail() {
   exit 1
 }
 
-if [[ ${1:-} == --interactive && -t 0 ]]; then
-  # Release the startup lock before waiting for the desktop terminal to close.
-  trap 'exec 9>&-; read -r -p "按 Enter 关闭窗口。" || true' EXIT
-fi
-
 mkdir -p "$RUNTIME_DIR"
 exec 9>"$RUNTIME_DIR/start.lock"
 if ! flock -n 9; then
-  printf '已有启动窗口正在检查服务。\n'
+  printf '已有启动命令正在检查服务。\n'
   exit 0
 fi
 
@@ -56,7 +51,7 @@ ensure_service() {
     printf '%s 已运行。\n' "$label"
     return
   fi
-  systemctl --user show-environment >/dev/null 2>&1 || fail '请以当前桌面用户身份运行启动器。'
+  systemctl --user show-environment >/dev/null 2>&1 || fail '无法连接用户服务管理器，请用本机普通用户登录后重试。'
   if ! systemctl --user is-active --quiet "$unit.service"; then
     if [[ -n "$(ss -H -ltn "sport = :$port")" ]]; then
       fail "$port 端口已被占用，$label 的健康检查未通过。"
