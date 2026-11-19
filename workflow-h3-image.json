@@ -1,0 +1,364 @@
+{
+  "22": {
+    "inputs": {
+      "value": ""
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {
+      "title": "补充提示词（可留空）"
+    }
+  },
+  "38": {
+    "inputs": {
+      "filename_prefix": "MiniMaxH3Image/Gallery",
+      "images": [
+        "322:407",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "保存图库生成图"
+    }
+  },
+  "39": {
+    "inputs": {
+      "比例": "3:4",
+      "模式": "总像素",
+      "固定边像素": 1536,
+      "百万像素": 1,
+      "长边最小": 1024,
+      "长边最大": 1536,
+      "自定宽度": 32,
+      "自定高度": 1024,
+      "倍数取整": 32,
+      "图像": [
+        "209",
+        0
+      ]
+    },
+    "class_type": "GoohaiRatioAndResolution",
+    "_meta": {
+      "title": "输出比例与分辨率",
+      "aux_id": "goohai/Goohaitools-comfyui",
+      "ver": "83abca47fa10d47a1ffd0c7cb62b7fa2a9dc0ddc"
+    }
+  },
+  "202": {
+    "inputs": {
+      "image_type": "发型",
+      "randomize": false,
+      "image": "h-f90f88b7d5d",
+      "random_categories": "{\"category\":\"\"}",
+      "crop": ""
+    },
+    "class_type": "GoohaiImageLibrary",
+    "_meta": {
+      "title": "发型图库"
+    }
+  },
+  "203": {
+    "inputs": {
+      "image_type": "姿势",
+      "randomize": false,
+      "image": "full_single_P015_front",
+      "random_categories": "{\"category\":\"\"}",
+      "crop": ""
+    },
+    "class_type": "GoohaiImageLibrary",
+    "_meta": {
+      "title": "姿势图库"
+    }
+  },
+  "204": {
+    "inputs": {
+      "image_type": "服装",
+      "randomize": false,
+      "image": "WIN-0106",
+      "random_categories": "{\"category\":\"\"}",
+      "crop": ""
+    },
+    "class_type": "GoohaiImageLibrary",
+    "_meta": {
+      "title": "服装图库"
+    }
+  },
+  "209": {
+    "inputs": {
+      "image_type": "人像",
+      "randomize": false,
+      "image": "f9d72de9d3f",
+      "random_categories": "{\"category\":\"\"}",
+      "crop": ""
+    },
+    "class_type": "GoohaiImageLibrary",
+    "_meta": {
+      "title": "人像图库"
+    }
+  },
+  "249": {
+    "inputs": {
+      "seed": 479948353989358
+    },
+    "class_type": "easy seed",
+    "_meta": {
+      "title": "随机种子",
+      "cnr_id": "comfyui-easy-use",
+      "ver": "130c1b5796d9876a5f853fa0bea88e808cfda4ad"
+    }
+  },
+  "322:411": {
+    "inputs": {
+      "gh_input_type": "ANY",
+      "Any": [
+        "209",
+        0
+      ]
+    },
+    "class_type": "GoohaiAnyExists",
+    "_meta": {
+      "title": "有人像",
+      "aux_id": "goohai/Goohaitools-comfyui",
+      "ver": "83abca47fa10d47a1ffd0c7cb62b7fa2a9dc0ddc"
+    }
+  },
+  "322:412": {
+    "inputs": {
+      "gh_input_type": "ANY",
+      "Any": [
+        "204",
+        0
+      ]
+    },
+    "class_type": "GoohaiAnyExists",
+    "_meta": {
+      "title": "有服装",
+      "aux_id": "goohai/Goohaitools-comfyui",
+      "ver": "83abca47fa10d47a1ffd0c7cb62b7fa2a9dc0ddc"
+    }
+  },
+  "322:413": {
+    "inputs": {
+      "gh_input_type": "ANY",
+      "Any": [
+        "203",
+        0
+      ]
+    },
+    "class_type": "GoohaiAnyExists",
+    "_meta": {
+      "title": "有姿势",
+      "aux_id": "goohai/Goohaitools-comfyui",
+      "ver": "83abca47fa10d47a1ffd0c7cb62b7fa2a9dc0ddc"
+    }
+  },
+  "322:414": {
+    "inputs": {
+      "gh_input_type": "ANY",
+      "Any": [
+        "202",
+        0
+      ]
+    },
+    "class_type": "GoohaiAnyExists",
+    "_meta": {
+      "title": "有发型",
+      "aux_id": "goohai/Goohaitools-comfyui",
+      "ver": "83abca47fa10d47a1ffd0c7cb62b7fa2a9dc0ddc"
+    }
+  },
+  "322:415": {
+    "inputs": {
+      "expression": "a + 2*b + 4*c + 8*d",
+      "values.a": [
+        "322:411",
+        1
+      ],
+      "values.b": [
+        "322:412",
+        1
+      ],
+      "values.c": [
+        "322:413",
+        1
+      ],
+      "values.d": [
+        "322:414",
+        1
+      ]
+    },
+    "class_type": "ComfyMathExpression",
+    "_meta": {
+      "title": "计算已启用素材的组合"
+    }
+  },
+  "322:416": {
+    "inputs": {
+      "prompt": "Create a photorealistic fashion image of one adult person.\nCreate a coherent photorealistic portrait of the same person as the portrait reference. Use <Picture 1> as the subject and preserve the adult person's facial identity, facial features and skin tone. Keep the original background, clothing, pose and framing and hairstyle from <Picture 1> unless the extra instructions specify a change.\nCreate a photorealistic fashion image of one adult person. Dress the subject in the outfit from <Picture 1>, matching its visible silhouette, layers, colors and fabric details. Use this image for clothing only. Integrate the references into one image with natural proportions and consistent lighting.\nCreate a coherent photorealistic portrait of the same person as the portrait reference. Use <Picture 1> as the subject and preserve the adult person's facial identity, facial features and skin tone. Dress the subject in the outfit from <Picture 2>, matching its visible silhouette, layers, colors and fabric details. Use this image for clothing only. Keep the original background, pose and framing and hairstyle from <Picture 1> unless the extra instructions specify a change. Integrate the references into one image with natural proportions and consistent lighting.\nCreate a photorealistic fashion image of one adult person. Match the body pose, viewing angle and framing in <Picture 1>. Keep the final image photographic and adapt the joints and hands naturally. Integrate the references into one image with natural proportions and consistent lighting.\nCreate a coherent photorealistic portrait of the same person as the portrait reference. Use <Picture 1> as the subject and preserve the adult person's facial identity, facial features and skin tone. Match the body pose, viewing angle and framing in <Picture 2>. Keep the final image photographic and adapt the joints and hands naturally. Keep the original background, clothing and hairstyle from <Picture 1> unless the extra instructions specify a change. Integrate the references into one image with natural proportions and consistent lighting.\nCreate a photorealistic fashion image of one adult person. Dress the subject in the outfit from <Picture 1>, matching its visible silhouette, layers, colors and fabric details. Use this image for clothing only. Match the body pose, viewing angle and framing in <Picture 2>. Keep the final image photographic and adapt the joints and hands naturally. Integrate the references into one image with natural proportions and consistent lighting.\nCreate a coherent photorealistic portrait of the same person as the portrait reference. Use <Picture 1> as the subject and preserve the adult person's facial identity, facial features and skin tone. Dress the subject in the outfit from <Picture 2>, matching its visible silhouette, layers, colors and fabric details. Use this image for clothing only. Match the body pose, viewing angle and framing in <Picture 3>. Keep the final image photographic and adapt the joints and hands naturally. Keep the original background and hairstyle from <Picture 1> unless the extra instructions specify a change. Integrate the references into one image with natural proportions and consistent lighting.\nCreate a photorealistic fashion image of one adult person. Match the hairstyle in <Picture 1>, including its parting, length, silhouette and color. Use this image for hair only. Integrate the references into one image with natural proportions and consistent lighting.\nCreate a coherent photorealistic portrait of the same person as the portrait reference. Use <Picture 1> as the subject and preserve the adult person's facial identity, facial features and skin tone. Match the hairstyle in <Picture 2>, including its parting, length, silhouette and color. Use this image for hair only. Keep the original background, clothing and pose and framing from <Picture 1> unless the extra instructions specify a change. Integrate the references into one image with natural proportions and consistent lighting.\nCreate a photorealistic fashion image of one adult person. Dress the subject in the outfit from <Picture 1>, matching its visible silhouette, layers, colors and fabric details. Use this image for clothing only. Match the hairstyle in <Picture 2>, including its parting, length, silhouette and color. Use this image for hair only. Integrate the references into one image with natural proportions and consistent lighting.\nCreate a coherent photorealistic portrait of the same person as the portrait reference. Use <Picture 1> as the subject and preserve the adult person's facial identity, facial features and skin tone. Dress the subject in the outfit from <Picture 2>, matching its visible silhouette, layers, colors and fabric details. Use this image for clothing only. Match the hairstyle in <Picture 3>, including its parting, length, silhouette and color. Use this image for hair only. Keep the original background and pose and framing from <Picture 1> unless the extra instructions specify a change. Integrate the references into one image with natural proportions and consistent lighting.\nCreate a photorealistic fashion image of one adult person. Match the body pose, viewing angle and framing in <Picture 1>. Keep the final image photographic and adapt the joints and hands naturally. Match the hairstyle in <Picture 2>, including its parting, length, silhouette and color. Use this image for hair only. Integrate the references into one image with natural proportions and consistent lighting.\nCreate a coherent photorealistic portrait of the same person as the portrait reference. Use <Picture 1> as the subject and preserve the adult person's facial identity, facial features and skin tone. Match the body pose, viewing angle and framing in <Picture 2>. Keep the final image photographic and adapt the joints and hands naturally. Match the hairstyle in <Picture 3>, including its parting, length, silhouette and color. Use this image for hair only. Keep the original background and clothing from <Picture 1> unless the extra instructions specify a change. Integrate the references into one image with natural proportions and consistent lighting.\nCreate a photorealistic fashion image of one adult person. Dress the subject in the outfit from <Picture 1>, matching its visible silhouette, layers, colors and fabric details. Use this image for clothing only. Match the body pose, viewing angle and framing in <Picture 2>. Keep the final image photographic and adapt the joints and hands naturally. Match the hairstyle in <Picture 3>, including its parting, length, silhouette and color. Use this image for hair only. Integrate the references into one image with natural proportions and consistent lighting.\nCreate a coherent photorealistic portrait of the same person as the portrait reference. Use <Picture 1> as the subject and preserve the adult person's facial identity, facial features and skin tone. Dress the subject in the outfit from <Picture 2>, matching its visible silhouette, layers, colors and fabric details. Use this image for clothing only. Match the body pose, viewing angle and framing in <Picture 3>. Keep the final image photographic and adapt the joints and hands naturally. Match the hairstyle in <Picture 4>, including its parting, length, silhouette and color. Use this image for hair only. Keep the original background from <Picture 1> unless the extra instructions specify a change. Integrate the references into one image with natural proportions and consistent lighting.",
+      "start_index": [
+        "322:415",
+        1
+      ],
+      "max_rows": 1,
+      "remove_empty_lines": true
+    },
+    "class_type": "easy promptLine",
+    "_meta": {
+      "title": "按实际参考图编号选择提示词",
+      "cnr_id": "comfyui-easy-use",
+      "ver": "130c1b5796d9876a5f853fa0bea88e808cfda4ad"
+    }
+  },
+  "322:417": {
+    "inputs": {
+      "string_a": [
+        "322:416",
+        0
+      ],
+      "string_b": [
+        "22",
+        0
+      ],
+      "delimiter": "\n\n"
+    },
+    "class_type": "StringConcatenate",
+    "_meta": {
+      "title": "合并自动提示词和补充要求"
+    }
+  },
+  "322:401": {
+    "inputs": {
+      "unet_name": "minimax_h3_image_pruned_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "322:402": {
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "322:403": {
+    "inputs": {
+      "vae_name": "minimax_h3_image_vae_fp16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "322:404": {
+    "inputs": {
+      "prompt": [
+        "322:417",
+        0
+      ],
+      "width": [
+        "39",
+        1
+      ],
+      "height": [
+        "39",
+        2
+      ],
+      "clip": [
+        "322:402",
+        0
+      ],
+      "vae": [
+        "322:403",
+        0
+      ],
+      "images.image_1": [
+        "209",
+        0
+      ],
+      "images.image_2": [
+        "204",
+        0
+      ],
+      "images.image_3": [
+        "203",
+        0
+      ],
+      "images.image_4": [
+        "202",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3ImageConditioning",
+    "_meta": {
+      "title": "MiniMax H3 Image Conditioning"
+    }
+  },
+  "322:405": {
+    "inputs": {
+      "conditioning": [
+        "322:404",
+        0
+      ]
+    },
+    "class_type": "ConditioningZeroOut",
+    "_meta": {
+      "title": "Conditioning Zero Out"
+    }
+  },
+  "322:406": {
+    "inputs": {
+      "seed": [
+        "249",
+        0
+      ],
+      "steps": 6,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "322:401",
+        0
+      ],
+      "positive": [
+        "322:404",
+        0
+      ],
+      "negative": [
+        "322:405",
+        0
+      ],
+      "latent_image": [
+        "322:404",
+        1
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "H3 Image · 6 步"
+    }
+  },
+  "322:407": {
+    "inputs": {
+      "samples": [
+        "322:406",
+        0
+      ],
+      "vae": [
+        "322:403",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  }
+}

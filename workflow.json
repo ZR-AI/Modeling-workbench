@@ -1,0 +1,472 @@
+{
+  "22": {
+    "inputs": {
+      "Text": ""
+    },
+    "class_type": "DF_Text_Box",
+    "_meta": {
+      "title": "补充提示词",
+      "cnr_id": "derfuu_comfyui_moddednodes",
+      "ver": "1.0.1"
+    }
+  },
+  "38": {
+    "inputs": {
+      "filename_prefix": "Qwen_修复验证_20261117",
+      "images": [
+        "322:319",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "保存图像",
+      "cnr_id": "comfy-core",
+      "ver": "0.37.0"
+    }
+  },
+  "39": {
+    "inputs": {
+      "比例": "3:4",
+      "模式": "总像素",
+      "固定边像素": 1536,
+      "百万像素": 2.0,
+      "长边最小": 1024,
+      "长边最大": 1536,
+      "自定宽度": 32,
+      "自定高度": 1024,
+      "倍数取整": 32,
+      "图像": [
+        "209",
+        0
+      ]
+    },
+    "class_type": "GoohaiRatioAndResolution",
+    "_meta": {
+      "title": "比例与分辨率",
+      "aux_id": "goohai/Goohaitools-comfyui",
+      "ver": "83abca47fa10d47a1ffd0c7cb62b7fa2a9dc0ddc"
+    }
+  },
+  "202": {
+    "inputs": {
+      "image_type": "发型",
+      "randomize": true,
+      "image": "h-f90f88b7d5d",
+      "random_categories": "{\"category\":\"\"}",
+      "crop": ""
+    },
+    "class_type": "GoohaiImageLibrary",
+    "_meta": {
+      "title": "Goohai 加载图库"
+    }
+  },
+  "203": {
+    "inputs": {
+      "image_type": "姿势",
+      "randomize": true,
+      "image": "full_sexy_P042_high",
+      "random_categories": "{\"category\":\"\"}",
+      "crop": "None"
+    },
+    "class_type": "GoohaiImageLibrary",
+    "_meta": {
+      "title": "Goohai 加载图库"
+    }
+  },
+  "204": {
+    "inputs": {
+      "image_type": "服装",
+      "randomize": false,
+      "image": "WIN-0142",
+      "random_categories": "{\"category\":\"\"}",
+      "crop": ""
+    },
+    "class_type": "GoohaiImageLibrary",
+    "_meta": {
+      "title": "Goohai 加载图库"
+    }
+  },
+  "209": {
+    "inputs": {
+      "image_type": "人像",
+      "randomize": true,
+      "image": "f9d72de9d3f",
+      "random_categories": "{\"category\":\"\"}",
+      "crop": ""
+    },
+    "class_type": "GoohaiImageLibrary",
+    "_meta": {
+      "title": "Goohai 加载图库"
+    }
+  },
+  "249": {
+    "inputs": {
+      "seed": 479948353989358
+    },
+    "class_type": "easy seed",
+    "_meta": {
+      "title": "随机种",
+      "cnr_id": "comfyui-easy-use",
+      "ver": "130c1b5796d9876a5f853fa0bea88e808cfda4ad"
+    }
+  },
+  "322:299": {
+    "inputs": {
+      "prompt": "-\n换装：保持图1构图、人物姿势与背景不变，让图1的人物穿着图2的服饰（图2只提供服装参考，不参考图2的姿势，保持图1的姿势不变），仅替换图1可见范围内的服饰与穿着，最终比例符合人体解剖学结构。\n\n换姿势：把图1人物的姿势改成图2相同的姿势，身体朝向、面部朝向均与图2的姿势图完全相同，取景与构图与图2的姿势图保持完全一致。保持图1服装完全不变\n\n换发型：保持图1人物面部、服装、场景与构图均不变，仅把发型替换成图2的同款发型，图2仅提供发型参考，不提供面部参考。\n\n改服装+发型：保持图1人物面部、姿势、构图与场景不变，把服饰穿着替换成图2的同款服饰穿着，并把发型替换成图3的发型（图3仅提供发型参考，不要参考其白色人台面部）。\n\n改服装+姿势：保持图1人物面部与场景不变，让图1人物穿着图2的同款服饰（仅参考图2的服饰，不参考姿势，以图3的姿势为总准），并把人物pose改成图3姿势图相同的pose,面部朝向与身体朝向均与图3姿势图相同，不要出现多余的手和脚.\n\n改姿势+发型：保持图1人物面部、场景不变，把图1人物的pose改成图2姿势图相同的pose，并把发型替换成图3的同款发型（图3仅提供发型参考，不要参考其白色人台面部），不要出现多余的手和脚。\n\n改服装+姿势+发型：保持图1的人物面部特征与背景不变，图1的人物穿着图2的服装，做着图3的pose，替换成图4的发型（图4仅提供发型部分的参考，不要参考脸部），面部朝向、身体姿势与图3姿势图完全相同，不要出现多余的手和脚。\n\n",
+      "start_index": [
+        "322:316",
+        0
+      ],
+      "max_rows": 1,
+      "remove_empty_lines": true
+    },
+    "class_type": "easy promptLine",
+    "_meta": {
+      "title": "提示词行",
+      "cnr_id": "comfyui-easy-use",
+      "ver": "130c1b5796d9876a5f853fa0bea88e808cfda4ad"
+    }
+  },
+  "322:300": {
+    "inputs": {
+      "clip_name": "qwen3vl_8b_int8_convrot.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "加载CLIP",
+      "cnr_id": "comfy-core",
+      "ver": "0.37.0"
+    }
+  },
+  "322:301": {
+    "inputs": {
+      "unet_name": "qwen_image_2.1_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "UNet加载器",
+      "cnr_id": "comfy-core",
+      "ver": "0.37.0"
+    }
+  },
+  "322:302": {
+    "inputs": {
+      "vae_name": "qwen_image_2.1_vae_bf16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "加载VAE",
+      "cnr_id": "comfy-core",
+      "ver": "0.37.0"
+    }
+  },
+  "322:305": {
+    "inputs": {
+      "用户提示词": [
+        "322:312",
+        0
+      ],
+      "文生图模型": "Qwen-Image-2.1-PE-T2I.Q5_K_S.gguf",
+      "图生图模型": "Qwen-Image-2.1-PE-I2I.Q5_K_S.gguf",
+      "视觉模型": "Qwen-Image-2.1-PE-I2I.mmproj-bf16.gguf",
+      "输出语言": "自动",
+      "透明背景": false,
+      "种子值": 11111,
+      "种子模式": "固定",
+      "卸载模型": "自动",
+      "图像_01": [
+        "209",
+        0
+      ],
+      "图像_02": [
+        "204",
+        0
+      ],
+      "图像_03": [
+        "203",
+        0
+      ],
+      "图像_04": [
+        "202",
+        0
+      ]
+    },
+    "class_type": "QwenImagePromptOptimizer",
+    "_meta": {
+      "title": "Qwen image 2.1 提示词优化",
+      "aux_id": "goohai/Goohaitools-comfyui",
+      "ver": "83abca47fa10d47a1ffd0c7cb62b7fa2a9dc0ddc"
+    }
+  },
+  "322:306": {
+    "inputs": {
+      "gh_input_type": "ANY",
+      "Any": [
+        "204",
+        0
+      ]
+    },
+    "class_type": "GoohaiAnyExists",
+    "_meta": {
+      "title": "万能是否存在(GH)",
+      "aux_id": "goohai/Goohaitools-comfyui",
+      "ver": "83abca47fa10d47a1ffd0c7cb62b7fa2a9dc0ddc"
+    }
+  },
+  "322:312": {
+    "inputs": {
+      "separator": ".",
+      "text1": [
+        "322:299",
+        0
+      ],
+      "text2": [
+        "22",
+        0
+      ]
+    },
+    "class_type": "CR Text Concatenate",
+    "_meta": {
+      "title": "文本联结",
+      "cnr_id": "ComfyUI_Comfyroll_CustomNodes",
+      "ver": "d78b780ae43fcf8c6b7c6505e6ffb4584281ceca"
+    }
+  },
+  "322:313": {
+    "inputs": {
+      "gh_input_type": "ANY",
+      "Any": [
+        "203",
+        0
+      ]
+    },
+    "class_type": "GoohaiAnyExists",
+    "_meta": {
+      "title": "万能是否存在(GH)",
+      "aux_id": "goohai/Goohaitools-comfyui",
+      "ver": "83abca47fa10d47a1ffd0c7cb62b7fa2a9dc0ddc"
+    }
+  },
+  "322:310": {
+    "inputs": {
+      "backend_mode": "sage_kitchen",
+      "model": [
+        "322:301",
+        0
+      ]
+    },
+    "class_type": "QwenImage21SageAttentionT8",
+    "_meta": {
+      "title": "Qwen Image 2.1 Sage Attention (T8)"
+    }
+  },
+  "322:311": {
+    "inputs": {
+      "residual_diff_threshold": 0.08,
+      "start_percent": 0.1,
+      "end_percent": 0.85,
+      "max_consecutive_hits": 2,
+      "cache_device": "cpu",
+      "metric_stride": 8,
+      "max_cache_mb": 1024,
+      "threshold_mode": "constant",
+      "split_ratio": 0.5,
+      "late_threshold": 0.03,
+      "model": [
+        "322:310",
+        0
+      ]
+    },
+    "class_type": "QwenImage21BlockCacheT8",
+    "_meta": {
+      "title": "Qwen Image 2.1 Block Cache (T8)"
+    }
+  },
+  "322:315": {
+    "inputs": {
+      "gh_input_type": "ANY",
+      "Any": [
+        "202",
+        0
+      ]
+    },
+    "class_type": "GoohaiAnyExists",
+    "_meta": {
+      "title": "万能是否存在(GH)",
+      "aux_id": "goohai/Goohaitools-comfyui",
+      "ver": "83abca47fa10d47a1ffd0c7cb62b7fa2a9dc0ddc"
+    }
+  },
+  "322:316": {
+    "inputs": {
+      "值1": "7 if a and b and c else 5 if a and b else 4 if a and c else 6 if b and c else 1 if a else 2 if b else 3 if c else 0",
+      "值2": "",
+      "a": [
+        "322:306",
+        1
+      ],
+      "b": [
+        "322:313",
+        1
+      ],
+      "c": [
+        "322:315",
+        1
+      ]
+    },
+    "class_type": "数学运算_孤海",
+    "_meta": {
+      "title": "数学运算 孤海",
+      "aux_id": "goohai/Goohaitools-comfyui",
+      "ver": "83abca47fa10d47a1ffd0c7cb62b7fa2a9dc0ddc"
+    }
+  },
+  "322:317": {
+    "inputs": {
+      "prompt": [
+        "322:305",
+        0
+      ],
+      "negative_prompt": "",
+      "latent_width": [
+        "39",
+        1
+      ],
+      "latent_height": [
+        "39",
+        2
+      ],
+      "mode": "填充",
+      "ref_image_size": "自动",
+      "clip": [
+        "322:300",
+        0
+      ],
+      "vae": [
+        "322:302",
+        0
+      ],
+      "image_01": [
+        "209",
+        0
+      ],
+      "image_02": [
+        "204",
+        0
+      ],
+      "image_03": [
+        "203",
+        0
+      ],
+      "image_04": [
+        "202",
+        0
+      ]
+    },
+    "class_type": "TextEncodeQwenImage21GH",
+    "_meta": {
+      "title": "Qwen Image 2.1 文本编码 GH",
+      "aux_id": "goohai/Goohaitools-comfyui",
+      "ver": "83abca47fa10d47a1ffd0c7cb62b7fa2a9dc0ddc"
+    }
+  },
+  "322:318": {
+    "inputs": {
+      "samples": [
+        "322:321",
+        0
+      ],
+      "vae": [
+        "322:302",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE解码",
+      "cnr_id": "comfy-core",
+      "ver": "0.37.0"
+    }
+  },
+  "322:319": {
+    "inputs": {
+      "image": [
+        "322:318",
+        0
+      ],
+      "info": [
+        "322:317",
+        3
+      ]
+    },
+    "class_type": "RestoreQwenImage21GH",
+    "_meta": {
+      "title": "Restore Qwen Image 2.1 GH",
+      "aux_id": "goohai/Goohaitools-comfyui",
+      "ver": "83abca47fa10d47a1ffd0c7cb62b7fa2a9dc0ddc"
+    }
+  },
+  "322:320": {
+    "inputs": {
+      "history": 4,
+      "degree": 2,
+      "ridge": 0.01,
+      "guard_threshold": 0.25,
+      "start_percent": 0.15,
+      "end_percent": 0.85,
+      "max_consecutive_hits": 1,
+      "cache_device": "cpu",
+      "max_cache_mb": 1024,
+      "threshold_mode": "constant",
+      "split_ratio": 0.5,
+      "late_threshold": 0.08,
+      "model": [
+        "322:311",
+        0
+      ]
+    },
+    "class_type": "QwenImage21SpectrumT8",
+    "_meta": {
+      "title": "Qwen Image 2.1 Spectrum (T8)"
+    }
+  },
+  "322:321": {
+    "inputs": {
+      "seed": [
+        "249",
+        0
+      ],
+      "steps": 28,
+      "cfg": 1.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1.0,
+      "model": [
+        "322:320",
+        0
+      ],
+      "positive": [
+        "322:317",
+        0
+      ],
+      "negative": [
+        "322:317",
+        1
+      ],
+      "latent_image": [
+        "322:317",
+        2
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "K采样器",
+      "cnr_id": "comfy-core",
+      "ver": "0.37.0"
+    }
+  }
+}

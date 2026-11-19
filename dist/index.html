@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#171918">
+  <meta name="description" content="用人像、服装、姿势和发型参考图生成新造型。">
+  <title>造型工作台</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" type="module"></script>
+</head>
+<body>
+  <svg xmlns="http://www.w3.org/2000/svg" class="symbols" aria-hidden="true">
+    <symbol id="i-brand" viewBox="0 0 24 24"><path d="M7 3a4 4 0 0 1 4 4v4H7a4 4 0 1 1 0-8Zm10 0a4 4 0 1 1 0 8h-4V7a4 4 0 0 1 4-4ZM7 13h4v4a4 4 0 1 1-4-4Zm6 0h4a4 4 0 1 1-4 4v-4Z"/></symbol>
+    <symbol id="i-history" viewBox="0 0 24 24"><path d="M3.5 11a8.5 8.5 0 1 1 1.6 6M3.5 5.4V11h5.6"/><path d="M12 7.5v5l3 1.8"/></symbol>
+    <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M3 7h3.2c4.6 0 5 10 10.4 10H21m-3 3 3-3-3-3M3 17h3c4.8 0 5-10 10.6-10H21m-3 3 3-3-3-3"/></symbol>
+    <symbol id="i-add" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 2c0 6-4 10-10 10 6 0 10 4 10 10 0-6 4-10 10-10-6 0-10-4-10-10Z"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M5 16v4h14v-4"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 4.5 4.5"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m-5 5 5-5 5 5M5 16v4h14v-4"/></symbol>
+    <symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="7.5" r="3.5"/><path d="M5 20c0-4 2.5-6 7-6s7 2 7 6"/></symbol>
+    <symbol id="i-shirt" viewBox="0 0 24 24"><path d="m9 4-3 1-4 5 4 3 2-2v9h8v-9l2 2 4-3-4-5-3-1a3 3 0 0 1-6 0Z"/></symbol>
+    <symbol id="i-pose" viewBox="0 0 24 24"><circle cx="14" cy="4.5" r="2"/><path d="m5 10 5 2 3-4 4 3 3-1m-7-2-2 7 4 2 2 4m-6-6-3 3-4 1"/></symbol>
+    <symbol id="i-hair" viewBox="0 0 24 24"><path d="M9 20c-1.5.3-3.7.2-5-1 1.2-2.3 1-5.5 1-8A7 7 0 0 1 19 11c0 2.5-.2 5.7 1 8-1.3 1.2-3.5 1.3-5 1M5 12c4 0 6-2 7-5 1 3 3 5 7 5"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="9" r="1.5"/><path d="m4 17 4.5-4.5 3.2 3.2 3.8-4.7 5 6"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="1.5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4 10-10"/></symbol>
+    <symbol id="i-crop" viewBox="0 0 24 24"><path d="M7 3v14h14M3 7h14v14"/></symbol>
+  </svg>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-icon"><svg aria-hidden="true"><use href="#i-brand"/></svg></span>
+        <span>造型工作台</span>
+      </div>
+      <div class="topbar-actions">
+        <span class="connection" id="connection" role="status"><span></span>连接中</span>
+        <button class="button quiet" id="open-history" type="button"><svg aria-hidden="true"><use href="#i-history"/></svg>生成记录</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <form class="controls" id="compose">
+      <section class="reference-section" aria-labelledby="ref-title">
+        <div class="section-title">
+          <h1 id="ref-title">参考素材</h1>
+          <button class="button quiet shuffle" id="shuffle" type="button" disabled><svg aria-hidden="true"><use href="#i-shuffle"/></svg>随机搭配</button>
+        </div>
+        <div class="references" id="references"></div>
+      </section>
+      <details class="instruction-field">
+        <summary><span id="instruction-label">补充提示词（可不填）</span><svg aria-hidden="true"><use href="#i-down"/></svg></summary>
+        <textarea id="instruction" aria-labelledby="instruction-label" maxlength="1200" rows="3" placeholder="例如：保留人物表情和背景"></textarea>
+      </details>
+      <div class="model-field">
+        <span id="model-label">模型</span>
+        <div class="model-picker" role="radiogroup" aria-labelledby="model-label">
+          <label><input type="radio" name="model" value="qwen" checked><span>Qwen 2.1</span></label>
+          <label><input type="radio" name="model" value="h3-image" aria-label="MiniMax H3 Image"><span>H3 Image</span></label>
+        </div>
+      </div>
+      <div class="controls-footer">
+        <label class="ratio-field"><span>画幅</span>
+          <span class="select-wrap"><select id="ratio">
+            <option value="原始比例">跟随人像</option>
+            <option value="3:4">3:4</option><option value="1:1">1:1</option><option value="4:3">4:3</option>
+            <option value="9:16">9:16</option><option value="16:9">16:9</option>
+          </select><svg aria-hidden="true"><use href="#i-down"/></svg></span>
+        </label>
+        <button class="button primary generate" id="generate" type="submit" disabled><svg aria-hidden="true"><use href="#i-spark"/></svg><span>生成图片</span></button>
+      </div>
+      <p class="form-message" id="form-message" role="status" hidden></p>
+    </form>
+    <section class="output" aria-labelledby="result-title">
+      <div class="section-title result-title">
+        <div class="result-heading"><h2 id="result-title">生成结果</h2><span id="result-type">示例</span></div>
+        <div class="result-actions">
+          <button class="button icon-button quiet" id="expand" type="button" aria-label="放大图片" title="放大图片"><svg aria-hidden="true"><use href="#i-expand"/></svg></button>
+          <a class="button quiet download" id="download" hidden><svg aria-hidden="true"><use href="#i-download"/></svg>下载</a>
+        </div>
+      </div>
+      <div class="canvas" id="canvas">
+        <img class="result-image" id="result-image" src="/assets/example.webp" alt="造型生成示例">
+        <div class="canvas-message" id="canvas-message" hidden>
+          <span class="spinner" id="spinner" aria-hidden="true"></span>
+          <p id="job-state" role="status"></p>
+          <button class="button quiet cancel" id="cancel" type="button" hidden><svg aria-hidden="true"><use href="#i-stop"/></svg>取消任务</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="gallery" class="gallery" aria-labelledby="gallery-title">
+    <div class="dialog-heading"><h2 id="gallery-title">选择素材</h2><button class="button icon-button quiet" data-close type="button" aria-label="关闭"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <div class="gallery-sources" role="group" aria-label="素材来源">
+      <button class="button quiet" id="built-in-gallery" type="button" aria-pressed="true">图库</button>
+      <button class="button quiet" id="personal-gallery" type="button" aria-pressed="false">我的图片</button>
+    </div>
+    <div class="gallery-toolbar">
+      <label class="search-field"><svg aria-hidden="true"><use href="#i-search"/></svg><input id="gallery-search" type="search" maxlength="100" placeholder="搜索素材" aria-label="搜索素材"></label>
+      <span class="select-wrap gallery-filter"><select id="gallery-category" aria-label="素材分类"><option value="">全部分类</option></select><svg aria-hidden="true"><use href="#i-down"/></svg></span>
+      <button class="button secondary gallery-action" id="gallery-random" type="button"><svg aria-hidden="true"><use href="#i-shuffle"/></svg><span>随机</span></button>
+      <button class="button secondary gallery-action" id="pick-upload" type="button"><svg aria-hidden="true"><use href="#i-upload"/></svg><span>上传</span></button>
+      <input id="upload-input" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+    </div>
+    <div class="gallery-scroll" id="gallery-scroll">
+      <p id="gallery-message" role="status" hidden></p>
+      <div class="gallery-grid" id="gallery-grid"></div>
+      <button class="button secondary more" id="gallery-more" type="button" hidden>加载更多</button>
+    </div>
+    <div class="gallery-footer"><button class="button quiet" id="clear-slot" type="button">移除此参考</button><button class="button quiet" id="restore-slot" type="button" hidden>恢复默认</button></div>
+  </dialog>
+
+  <dialog id="crop-dialog" class="crop-dialog" aria-labelledby="crop-title">
+    <div class="dialog-heading"><h2 id="crop-title">裁剪图片</h2><button class="button icon-button quiet" data-close type="button" aria-label="取消裁剪"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <div class="crop-stage">
+      <p id="crop-message" role="status" hidden></p>
+      <canvas id="crop-canvas" tabindex="0" aria-label="裁剪选框，方向键可移动" hidden></canvas>
+    </div>
+    <div class="crop-toolbar">
+      <label class="ratio-field"><span>比例</span><span class="select-wrap"><select id="crop-ratio">
+        <option value="free">自由</option><option>1:1</option><option>2:3</option><option>3:2</option>
+        <option>3:4</option><option>4:3</option><option>9:16</option><option>16:9</option>
+        <option>21:9</option><option>1:2</option><option>2:1</option>
+      </select><svg aria-hidden="true"><use href="#i-down"/></svg></span></label>
+      <button class="button quiet" id="crop-reset" type="button">恢复原图</button>
+      <button class="button primary" id="crop-apply" type="button">应用</button>
+    </div>
+  </dialog>
+
+  <dialog id="history" class="history" aria-labelledby="history-title">
+    <div class="dialog-heading"><h2 id="history-title">生成记录</h2><button class="button icon-button quiet" data-close type="button" aria-label="关闭"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <div class="history-list" id="history-list"></div>
+  </dialog>
+
+  <dialog id="lightbox" class="lightbox" aria-label="图片预览">
+    <button class="button icon-button quiet" data-close type="button" aria-label="关闭"><svg aria-hidden="true"><use href="#i-close"/></svg></button>
+    <img id="lightbox-image" alt="造型图片">
+  </dialog>
+</body>
+</html>
