@@ -165,6 +165,9 @@ textarea::placeholder, input::placeholder { color: var(--dim); }
 .select-wrap svg { position: absolute; pointer-events: none; right: 9px; top: 50%; transform: translateY(-50%); color: var(--muted); width: 14px; height: 14px; }
 select { appearance: none; border: 1px solid var(--line); border-radius: 9px; padding: 0 29px 0 10px; background: var(--raised); color: var(--text); height: 42px; font-size: 13px; }
 .generate { min-height: 44px; flex: 1 0 104px; }
+.parallel-field { margin-top: 10px; color: var(--muted); font-size: 12px; }
+.parallel-field label { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; cursor: pointer; }
+.parallel-field input { accent-color: var(--accent); margin: 0; }
 .form-message { margin-top: 12px; line-height: 1.5; color: var(--danger); font-size: 13px; }
 .result-title { padding-left: 3px; margin-bottom: 12px; }
 .result-heading, .result-actions { display: flex; align-items: center; gap: 12px; }

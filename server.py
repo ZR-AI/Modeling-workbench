@@ -39,6 +39,7 @@ RATIOS = {"原始比例", "3:4", "1:1", "4:3", "9:16", "16:9"}
 ID = r"[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}"
 MAX_UPLOAD = 12 * 1024 * 1024
 MAX_QUEUE = 8
+PARALLEL_SIZE = 2
 MAX_UPLOAD_PIXELS = 20_000_000
 IMAGE_TYPES = {".webp": "image/webp", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png"}
 LOG = logging.getLogger("qwen-web")
@@ -348,24 +349,25 @@ async def random_selections(app, kind, count):
     return selected + random.choices(selected, k=count - len(selected))
 
 
-async def enqueue(app, job, graph):
-    job_id = job["id"]
-    marker = JOBS / f"{job_id}.json"
-    marker.write_text(json.dumps(job))
+async def enqueue(app, jobs, graph):
+    job_id = jobs[0]["id"]
+    markers = [JOBS / f"{job['id']}.json" for job in jobs]
+    for job, marker in zip(jobs, markers):
+        marker.write_text(json.dumps(job))
     try:
         result = await comfy(app, "/prompt", payload={
             "prompt_id": job_id, "client_id": job_id, "prompt": graph,
         })
-    except ComfyError:
-        marker.unlink(missing_ok=True)
+        if result.get("prompt_id") != job_id:
+            raise ApiError(502, "ComfyUI 返回了无效的任务编号")
+    except (ApiError, ComfyError):
+        for marker in markers:
+            marker.unlink(missing_ok=True)
         raise
     except (ClientError, TimeoutError):
         # The ID is fixed before submission, so polling can recover a lost reply.
         LOG.warning("ComfyUI submission reply lost for %s", job_id)
         return False
-    if result.get("prompt_id") != job_id:
-        marker.unlink(missing_ok=True)
-        raise ApiError(502, "ComfyUI 返回了无效的任务编号")
     return True
 
 
@@ -383,15 +385,22 @@ async def submit(request):
     instruction = body.get("instruction", "")
     ratio = body.get("ratio", "原始比例")
     count = body.get("count", 1)
+    parallel = body.get("parallel", False)
     randomize = body.get("randomize", [])
     refs = body.get("references")
     if type(count) is not int or not 1 <= count <= MAX_QUEUE:
         raise ApiError(400, f"生成数量必须为 1 至 {MAX_QUEUE} 张")
+    if type(parallel) is not bool:
+        raise ApiError(400, "并行生成选项无效")
+    if parallel and model != "qwen":
+        raise ApiError(400, "当前 H3 Image 工作流请使用逐张生成")
     if not isinstance(randomize, list) or len(randomize) > len(SLOTS) or any(
         not isinstance(kind, str) or kind not in SLOTS for kind in randomize
     ):
         raise ApiError(400, "随机素材类型无效")
     random_kinds = set(randomize)
+    if parallel and random_kinds:
+        raise ApiError(400, "随机素材请使用逐张生成")
     if not isinstance(instruction, str) or len(instruction) > 1200 or not isinstance(ratio, str) or ratio not in RATIOS:
         raise ApiError(400, "请检查画幅与补充提示词")
     if not isinstance(refs, dict) or refs.keys() - SLOTS.keys():
@@ -405,31 +414,43 @@ async def submit(request):
         raise ApiError(400, "请选择一项造型素材，或填写补充提示词")
     picks = {kind: await random_selections(request.app, kind, count) for kind in SLOTS if kind in random_kinds}
     batch_id = str(uuid4()) if count > 1 else None
+    group_size = PARALLEL_SIZE if parallel else 1
     jobs = []
     warning = None
     async with request.app["submit_lock"]:
         queue = await comfy(request.app, "/queue")
-        if len(queue["queue_pending"]) + count > MAX_QUEUE:
+        if len(queue["queue_pending"]) + math.ceil(count / group_size) > MAX_QUEUE:
             raise ApiError(429, "队列空间不足，请减少生成数量或稍后再试")
         created = int(time.time())
-        for index in range(count):
-            job_id = str(uuid4())
-            job = {"id": job_id, "created": created, "model": model}
+        for index in range(0, count, group_size):
+            group = [{"id": str(uuid4()), "created": created, "model": model}
+                     for _ in range(min(group_size, count - index))]
+            job_id = group[0]["id"]
             if batch_id:
-                job.update(batch=batch_id, position=index + 1)
+                for position, job in enumerate(group, index + 1):
+                    job.update(batch=batch_id, position=position)
             selections = {**fixed, **{kind: choices[index] for kind, choices in picks.items()}}
             graph = make_prompt(model, selections, instruction, ratio, job_id)
+            if len(group) > 1:
+                sampler = graph["322:321"]["inputs"]
+                graph["9001"] = {"class_type": "RepeatLatentBatch", "inputs": {
+                    "samples": sampler["latent_image"], "amount": len(group),
+                }}
+                sampler["latent_image"] = ["9001", 0]
+                member_ids = [member["id"] for member in group]
+                for output_index, job in enumerate(group, 1):
+                    job.update(prompt_id=job_id, output_index=output_index, parallel_ids=member_ids)
             try:
-                confirmed = await enqueue(request.app, job, graph)
+                confirmed = await enqueue(request.app, group, graph)
             except (ApiError, ComfyError) as exc:
                 if not jobs:
                     raise
                 LOG.warning("Batch %s stopped while submitting image %s: %s", batch_id, index + 1, exc)
                 warning = f"已提交 {len(jobs)} 张，其余任务提交失败"
                 break
-            jobs.append({**job, "state": "queued"})
+            jobs.extend({**job, "state": "queued"} for job in group)
             if not confirmed and batch_id:
-                warning = f"已发送 {len(jobs)} 张，最后一张等待确认"
+                warning = f"已发送 {len(jobs)} 张，最后一组等待确认"
                 if len(jobs) < count:
                     warning += "，其余任务尚未提交"
                 break
@@ -446,17 +467,19 @@ def web_job(request):
     return job
 
 
-def output_path(job_id):
-    return OUTPUTS / job_id / "result_00001_.png"
+def output_path(job):
+    prompt_id = job.get("prompt_id", job["id"])
+    return OUTPUTS / prompt_id / f"result_{job.get('output_index', 1):05d}_.png"
 
 
 @routes.get("/api/jobs/{job_id:" + ID + "}")
 async def job_status(request):
     job = web_job(request)
     job_id = job["id"]
-    result = await comfy(request.app, f"/api/jobs/{job_id}", allow_missing=True)
+    prompt_id = job.get("prompt_id", job_id)
+    result = await comfy(request.app, f"/api/jobs/{prompt_id}", allow_missing=True)
     status = result.get("status") if result else None
-    path = output_path(job_id)
+    path = output_path(job)
     if status in {None, "completed"} and path.is_file():
         data = {"state": "success", "image": f"/api/jobs/{job_id}/image"}
     elif status in {"pending", "in_progress"}:
@@ -466,7 +489,9 @@ async def job_status(request):
     elif status == "failed":
         reason = result.get("execution_error") or {}
         LOG.info("Job %s failed: %s", job_id, str(reason)[:1000])
-        message = "显存或内存不足，请减少参考图后重试" if "out of memory" in str(reason).lower() else "ComfyUI 生成失败，请重试"
+        message = "ComfyUI 生成失败，请重试"
+        if "out of memory" in str(reason).lower():
+            message = "显存或内存不足，请关闭并行生成后重试" if "parallel_ids" in job else "显存或内存不足，请减少参考图后重试"
         data = {"state": "error", "error": message}
     elif status is None and time.time() - job["created"] < 25:
         data = {"state": "queued"}
@@ -478,21 +503,24 @@ async def job_status(request):
 @routes.post("/api/jobs/{job_id:" + ID + "}/cancel")
 async def cancel(request):
     job = web_job(request)
-    result = await comfy(request.app, f"/api/jobs/{job['id']}/cancel", payload={})
+    prompt_id = job.get("prompt_id", job["id"])
+    result = await comfy(request.app, f"/api/jobs/{prompt_id}/cancel", payload={})
     if result.get("cancelled"):
         # ComfyUI removes pending jobs without writing a history entry.
-        marker = JOBS / f"{job['id']}.json"
-        job["cancelled"] = True
-        temporary = marker.with_suffix(".tmp")
-        temporary.write_text(json.dumps(job))
-        temporary.replace(marker)
+        for member_id in job.get("parallel_ids", [job["id"]]):
+            marker = JOBS / f"{member_id}.json"
+            member = json.loads(marker.read_text())
+            member["cancelled"] = True
+            temporary = marker.with_suffix(".tmp")
+            temporary.write_text(json.dumps(member))
+            temporary.replace(marker)
     return web.json_response({"cancelled": bool(result.get("cancelled"))})
 
 
 @routes.get("/api/jobs/{job_id:" + ID + "}/image")
 async def job_image(request):
     job = web_job(request)
-    path = output_path(job["id"])
+    path = output_path(job)
     if not path.is_file():
         raise ApiError(404, "结果尚未生成")
     headers = {}

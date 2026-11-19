@@ -38,6 +38,16 @@ let batchView = "";
 let galleryClickTimer = null;
 const cropEditor = createCropEditor($("crop-dialog"));
 
+function renderParallel() {
+  const multiple = Number($("count").value) > 1;
+  const reason = form.elements.model.value === "h3-image" ? "H3 Image 逐张生成"
+    : app.randomSlots.size ? "随机素材逐张生成" : "";
+  $("parallel-field").hidden = !multiple;
+  $("parallel-choice").hidden = Boolean(reason);
+  $("parallel").disabled = !multiple || Boolean(reason);
+  message($("parallel-reason"), reason);
+}
+
 function load(key, fallback) {
   try {
     return JSON.parse(localStorage.getItem(`qwen-studio-${key}`)) ?? fallback;
@@ -143,6 +153,7 @@ function renderReferences() {
         if (app.randomSlots.has(kind)) app.randomSlots.delete(kind);
         else app.randomSlots.add(kind);
         renderReferences();
+        renderParallel();
       });
       entry.append(card, cropButton, randomButton);
       refs.append(entry);
@@ -437,6 +448,7 @@ function renderOutput() {
   $("canvas-message").hidden = success || example;
   $("spinner").hidden = !loading;
   $("cancel").hidden = !pending(job);
+  $("cancel").querySelector("span").textContent = job?.parallel_ids ? "取消这组" : "取消任务";
   generate.disabled = !app.online || app.submitting || app.activeIds.size > 0;
   generate.querySelector("span").textContent = app.submitting ? "正在提交" : app.activeIds.size ? "任务进行中" : "生成图片";
   if (success) {
@@ -572,6 +584,7 @@ form.addEventListener("submit", async (event) => {
     const job = await post("/api/jobs", {
       model: form.elements.model.value, references: refs, instruction, ratio: $("ratio").value,
       count: Number($("count").value), randomize: [...app.randomSlots],
+      parallel: !$("parallel").disabled && $("parallel").checked,
     });
     const jobs = job.jobs || [job];
     remember(jobs);
@@ -622,11 +635,13 @@ $("ratio").value = load("ratio", "原始比例");
 $("count").value = load("count", "1");
 form.elements.model.value = load("model", "qwen") === "h3-image" ? "h3-image" : "qwen";
 document.querySelectorAll(".model-picker input").forEach((radio) => {
-  radio.addEventListener("change", () => save("model", form.elements.model.value));
+  radio.addEventListener("change", () => { save("model", form.elements.model.value); renderParallel(); });
 });
 $("instruction").addEventListener("input", () => save("instruction", $("instruction").value));
 $("ratio").addEventListener("change", () => save("ratio", $("ratio").value));
-$("count").addEventListener("change", () => save("count", $("count").value));
+$("count").addEventListener("change", () => { save("count", $("count").value); renderParallel(); });
+$("parallel").checked = load("parallel", true);
+$("parallel").addEventListener("change", () => save("parallel", $("parallel").checked));
 
 async function defaults() {
   try {
@@ -640,6 +655,7 @@ async function defaults() {
 
 Object.values(app.selections).forEach(rememberUpload);
 renderReferences();
+renderParallel();
 app.viewId = app.jobs[0]?.id || null;
 track(app.jobs);
 renderOutput();

@@ -82,6 +82,10 @@
         </label>
         <button class="button primary generate" id="generate" type="submit" disabled><svg aria-hidden="true"><use href="#i-spark"/></svg><span>生成图片</span></button>
       </div>
+      <div class="parallel-field" id="parallel-field" hidden>
+        <label id="parallel-choice"><input type="checkbox" id="parallel" checked><span>并行生成（每组 2 张）</span></label>
+        <span id="parallel-reason" hidden></span>
+      </div>
       <p class="form-message" id="form-message" role="status" hidden></p>
     </form>
     <section class="output" aria-labelledby="result-title">
@@ -97,7 +101,7 @@
         <div class="canvas-message" id="canvas-message" hidden>
           <span class="spinner" id="spinner" aria-hidden="true"></span>
           <p id="job-state" role="status"></p>
-          <button class="button quiet cancel" id="cancel" type="button" hidden><svg aria-hidden="true"><use href="#i-stop"/></svg>取消任务</button>
+          <button class="button quiet cancel" id="cancel" type="button" hidden><svg aria-hidden="true"><use href="#i-stop"/></svg><span>取消任务</span></button>
         </div>
       </div>
       <div class="batch-results" id="batch-results" hidden>
