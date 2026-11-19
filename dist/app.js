@@ -17,7 +17,7 @@ const image = $("result-image");
 const generate = $("generate");
 const app = {
   selections: load("selections", {}),
-  randomSlots: new Set(load("random-slots", [])),
+  randomSlots: new Set(),
   uploads: load("uploads", []),
   defaults: {},
   jobs: load("jobs", []),
@@ -142,7 +142,6 @@ function renderReferences() {
         clearTimeout(galleryClickTimer);
         if (app.randomSlots.has(kind)) app.randomSlots.delete(kind);
         else app.randomSlots.add(kind);
-        save("random-slots", [...app.randomSlots]);
         renderReferences();
       });
       entry.append(card, cropButton, randomButton);
