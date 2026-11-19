@@ -334,6 +334,41 @@ async def validate_selection(app, kind, choice):
     raise ApiError(400, f"{SLOTS[kind][1]}素材已失效，请重新选择")
 
 
+async def random_selections(app, kind, count):
+    candidates = list((await catalog(app, kind)).values())
+    random.shuffle(candidates)
+    selected = []
+    for item in candidates:
+        if await asyncio.to_thread(matches_package_source, item):
+            selected.append({"id": item["id"]})
+            if len(selected) == count:
+                return selected
+    if not selected:
+        raise ApiError(400, f"{SLOTS[kind][1]}图库没有可用素材")
+    return selected + random.choices(selected, k=count - len(selected))
+
+
+async def enqueue(app, job, graph):
+    job_id = job["id"]
+    marker = JOBS / f"{job_id}.json"
+    marker.write_text(json.dumps(job))
+    try:
+        result = await comfy(app, "/prompt", payload={
+            "prompt_id": job_id, "client_id": job_id, "prompt": graph,
+        })
+    except ComfyError:
+        marker.unlink(missing_ok=True)
+        raise
+    except (ClientError, TimeoutError):
+        # The ID is fixed before submission, so polling can recover a lost reply.
+        LOG.warning("ComfyUI submission reply lost for %s", job_id)
+        return False
+    if result.get("prompt_id") != job_id:
+        marker.unlink(missing_ok=True)
+        raise ApiError(502, "ComfyUI 返回了无效的任务编号")
+    return True
+
+
 @routes.post("/api/jobs")
 async def submit(request):
     try:
@@ -347,39 +382,58 @@ async def submit(request):
         raise ApiError(400, "请选择 Qwen 2.1 或 H3 Image")
     instruction = body.get("instruction", "")
     ratio = body.get("ratio", "原始比例")
+    count = body.get("count", 1)
+    randomize = body.get("randomize", [])
     refs = body.get("references")
+    if type(count) is not int or not 1 <= count <= MAX_QUEUE:
+        raise ApiError(400, f"生成数量必须为 1 至 {MAX_QUEUE} 张")
+    if not isinstance(randomize, list) or len(randomize) > len(SLOTS) or any(
+        not isinstance(kind, str) or kind not in SLOTS for kind in randomize
+    ):
+        raise ApiError(400, "随机素材类型无效")
+    random_kinds = set(randomize)
     if not isinstance(instruction, str) or len(instruction) > 1200 or not isinstance(ratio, str) or ratio not in RATIOS:
         raise ApiError(400, "请检查画幅与补充提示词")
-    if not isinstance(refs, dict) or refs.keys() - SLOTS.keys() or not refs.get("portrait"):
+    if not isinstance(refs, dict) or refs.keys() - SLOTS.keys():
+        raise ApiError(400, "素材格式无效")
+    if "portrait" not in random_kinds and not refs.get("portrait"):
         raise ApiError(400, "请先选择人像")
-    refs = {kind: await validate_selection(request.app, kind, choice) for kind, choice in refs.items() if choice is not None}
+    fixed = {kind: await validate_selection(request.app, kind, choice)
+             for kind, choice in refs.items() if choice is not None and kind not in random_kinds}
     instruction = instruction.strip()
-    if len(refs) == 1 and not instruction:
+    if len(fixed.keys() | random_kinds) == 1 and not instruction:
         raise ApiError(400, "请选择一项造型素材，或填写补充提示词")
+    picks = {kind: await random_selections(request.app, kind, count) for kind in SLOTS if kind in random_kinds}
+    batch_id = str(uuid4()) if count > 1 else None
+    jobs = []
+    warning = None
     async with request.app["submit_lock"]:
         queue = await comfy(request.app, "/queue")
-        if len(queue["queue_pending"]) >= MAX_QUEUE:
-            raise ApiError(429, "生成队列已满，请稍后再试")
-        job_id = str(uuid4())
-        graph = make_prompt(model, refs, instruction, ratio, job_id)
-        job = {"id": job_id, "created": int(time.time()), "model": model}
-        marker = JOBS / f"{job_id}.json"
-        marker.write_text(json.dumps(job))
-        try:
-            result = await comfy(request.app, "/prompt", payload={
-                "prompt_id": job_id, "client_id": job_id, "prompt": graph,
-            })
-        except ComfyError:
-            marker.unlink(missing_ok=True)
-            raise
-        except (ClientError, TimeoutError):
-            # The ID is fixed before submission, so polling can recover a lost reply.
-            LOG.warning("ComfyUI submission reply lost for %s", job_id)
-        else:
-            if result.get("prompt_id") != job_id:
-                marker.unlink(missing_ok=True)
-                raise ApiError(502, "ComfyUI 返回了无效的任务编号")
-    return web.json_response({**job, "state": "queued"}, status=202)
+        if len(queue["queue_pending"]) + count > MAX_QUEUE:
+            raise ApiError(429, "队列空间不足，请减少生成数量或稍后再试")
+        created = int(time.time())
+        for index in range(count):
+            job_id = str(uuid4())
+            job = {"id": job_id, "created": created, "model": model}
+            if batch_id:
+                job.update(batch=batch_id, position=index + 1)
+            selections = {**fixed, **{kind: choices[index] for kind, choices in picks.items()}}
+            graph = make_prompt(model, selections, instruction, ratio, job_id)
+            try:
+                confirmed = await enqueue(request.app, job, graph)
+            except (ApiError, ComfyError) as exc:
+                if not jobs:
+                    raise
+                LOG.warning("Batch %s stopped while submitting image %s: %s", batch_id, index + 1, exc)
+                warning = f"已提交 {len(jobs)} 张，其余任务提交失败"
+                break
+            jobs.append({**job, "state": "queued"})
+            if not confirmed and batch_id:
+                warning = f"已发送 {len(jobs)} 张，最后一张等待确认"
+                if len(jobs) < count:
+                    warning += "，其余任务尚未提交"
+                break
+    return web.json_response({**jobs[0], "jobs": jobs, **({"warning": warning} if warning else {})}, status=202)
 
 
 def web_job(request):

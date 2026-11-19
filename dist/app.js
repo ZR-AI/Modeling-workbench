@@ -17,11 +17,12 @@ const image = $("result-image");
 const generate = $("generate");
 const app = {
   selections: load("selections", {}),
+  randomSlots: new Set(load("random-slots", [])),
   uploads: load("uploads", []),
   defaults: {},
   jobs: load("jobs", []),
   viewId: null,
-  activeId: null,
+  activeIds: new Set(),
   online: false,
   submitting: false,
   shuffling: false,
@@ -32,6 +33,8 @@ let galleryRequest = null;
 let searchTimer = null;
 let galleryPage = 1;
 let pollTimer = null;
+let polling = false;
+let batchView = "";
 let galleryClickTimer = null;
 const cropEditor = createCropEditor($("crop-dialog"));
 
@@ -122,15 +125,36 @@ function renderReferences() {
       cropButton.title = `裁剪${slot.name}`;
       cropButton.append(icon("crop"));
       cropButton.addEventListener("click", () => openCrop(kind));
-      entry.append(card, cropButton);
+      const randomButton = document.createElement("button");
+      randomButton.type = "button";
+      randomButton.className = "button reference-random";
+      randomButton.setAttribute("role", "switch");
+      randomButton.setAttribute("aria-label", `随机选择${slot.name}`);
+      const track = document.createElement("span");
+      track.className = "switch-track";
+      track.setAttribute("aria-hidden", "true");
+      const randomLabel = document.createElement("span");
+      randomLabel.className = "switch-label";
+      randomLabel.textContent = "随机";
+      randomButton.title = `随机选择${slot.name}`;
+      randomButton.append(track, randomLabel);
+      randomButton.addEventListener("click", () => {
+        clearTimeout(galleryClickTimer);
+        if (app.randomSlots.has(kind)) app.randomSlots.delete(kind);
+        else app.randomSlots.add(kind);
+        save("random-slots", [...app.randomSlots]);
+        renderReferences();
+      });
+      entry.append(card, cropButton, randomButton);
       refs.append(entry);
     }
   }
   for (const entry of refs.children) {
     const card = entry.firstElementChild;
-    const cropButton = entry.lastElementChild;
+    const cropButton = entry.querySelector(".reference-crop");
     const kind = card.dataset.kind;
     const item = app.selections[kind];
+    entry.querySelector(".reference-random").setAttribute("aria-checked", String(app.randomSlots.has(kind)));
     const photo = card.firstElementChild;
     const text = item ? `${slots[kind].name}：${item.name}` : `选择${slots[kind].name}`;
     card.setAttribute("aria-label", text);
@@ -351,10 +375,11 @@ $("upload-input").addEventListener("change", async (event) => {
   }
 });
 
-function remember(job) {
-  const saved = app.jobs.find((entry) => entry.id === job.id);
-  if (saved && saved.state === job.state) return;
-  app.jobs = [job, ...app.jobs.filter((entry) => entry.id !== job.id)]
+function remember(jobs) {
+  const changed = jobs.filter((job) => app.jobs.find((entry) => entry.id === job.id)?.state !== job.state);
+  if (!changed.length) return;
+  const ids = new Set(changed.map((job) => job.id));
+  app.jobs = [...changed, ...app.jobs.filter((entry) => !ids.has(entry.id))]
     .sort((a, b) => b.created - a.created).slice(0, 25);
   save("jobs", app.jobs);
   if (historyDialog.open) renderHistory();
@@ -364,6 +389,42 @@ function showImage(url, alt) {
   if (image.getAttribute("src") !== url) image.src = url;
   image.alt = alt;
   image.hidden = false;
+}
+
+function renderBatch(job) {
+  const entries = job?.batch ? app.jobs.filter((entry) => entry.batch === job.batch)
+    .sort((a, b) => a.position - b.position) : [];
+  const key = JSON.stringify([job?.id, entries.map((entry) => [entry.id, entry.state])]);
+  if (key === batchView) return;
+  batchView = key;
+  $("batch-results").hidden = entries.length < 2;
+  if (entries.length < 2) return;
+  const completed = entries.filter((entry) => entry.state === "success").length;
+  message($("batch-status"), `已生成 ${completed} / ${entries.length} 张`);
+  const strip = $("batch-thumbs");
+  const focused = document.activeElement?.dataset.job;
+  strip.replaceChildren();
+  for (const entry of entries) {
+    const thumb = document.createElement("button");
+    thumb.type = "button";
+    thumb.className = "batch-thumb";
+    thumb.dataset.job = entry.id;
+    thumb.setAttribute("aria-pressed", String(entry.id === job.id));
+    thumb.setAttribute("aria-label", `第 ${entry.position} 张，${states[entry.state]}`);
+    if (entry.state === "success") {
+      const img = document.createElement("img");
+      img.alt = "";
+      img.src = entry.image;
+      thumb.append(img);
+    } else {
+      const label = document.createElement("span");
+      label.textContent = `${entry.position} · ${states[entry.state]}`;
+      thumb.append(label);
+    }
+    thumb.addEventListener("click", () => { app.viewId = entry.id; renderOutput(); });
+    strip.append(thumb);
+    if (focused === entry.id) thumb.focus({ preventScroll: true });
+  }
 }
 
 function renderOutput() {
@@ -377,8 +438,8 @@ function renderOutput() {
   $("canvas-message").hidden = success || example;
   $("spinner").hidden = !loading;
   $("cancel").hidden = !pending(job);
-  generate.disabled = !app.online || app.submitting || Boolean(app.activeId);
-  generate.querySelector("span").textContent = app.submitting ? "正在提交" : app.activeId ? "任务进行中" : "生成图片";
+  generate.disabled = !app.online || app.submitting || app.activeIds.size > 0;
+  generate.querySelector("span").textContent = app.submitting ? "正在提交" : app.activeIds.size ? "任务进行中" : "生成图片";
   if (success) {
     showImage(job.image, "生成的造型图片");
     $("download").href = job.image + "?download=1";
@@ -389,6 +450,7 @@ function renderOutput() {
     const text = job?.error || (job ? states[job.state] : "正在提交任务");
     message($("job-state"), text);
   }
+  renderBatch(job);
 }
 
 async function checkHealth() {
@@ -405,32 +467,34 @@ async function checkHealth() {
   renderOutput();
 }
 
-async function poll(id) {
-  if (app.activeId !== id) return;
-  try {
-    const job = await request(`/api/jobs/${id}`);
-    if (app.activeId !== id) return;
-    remember(job);
-    if (!pending(job)) app.activeId = null;
-    renderOutput();
-  } catch (error) {
-    if (app.activeId !== id) return;
-    if (error.status === 404) {
-      const job = app.jobs.find((entry) => entry.id === id);
-      remember({ ...job, state: "error", error: "任务记录已失效" });
-      app.activeId = null;
-      renderOutput();
-    } else if (app.viewId === id) {
-      message($("job-state"), "正在重新连接 ComfyUI…");
+async function poll() {
+  pollTimer = null;
+  polling = true;
+  const reconnecting = new Set();
+  const updates = await Promise.all([...app.activeIds].map(async (id) => {
+    try {
+      return await request(`/api/jobs/${id}`);
+    } catch (error) {
+      if (error.status === 404) {
+        const job = app.jobs.find((entry) => entry.id === id);
+        return { ...job, id, state: "error", error: "任务记录已失效" };
+      }
+      reconnecting.add(id);
+      return null;
     }
-  }
-  if (app.activeId === id) pollTimer = setTimeout(() => poll(id), 1400);
+  }));
+  const known = updates.filter(Boolean);
+  for (const job of known) if (!pending(job)) app.activeIds.delete(job.id);
+  remember(known);
+  renderOutput();
+  if (reconnecting.has(app.viewId)) message($("job-state"), "正在重新连接 ComfyUI…");
+  polling = false;
+  if (app.activeIds.size) pollTimer = setTimeout(poll, 1400);
 }
 
-function track(id) {
-  app.activeId = id;
-  clearTimeout(pollTimer);
-  poll(id);
+function track(jobs) {
+  for (const job of jobs) if (pending(job)) app.activeIds.add(job.id);
+  if (app.activeIds.size && pollTimer === null && !polling) poll();
 }
 
 function renderHistory() {
@@ -465,7 +529,7 @@ function renderHistory() {
     entry.append(thumb, label, icon("chevron"));
     entry.addEventListener("click", () => {
       app.viewId = job.id;
-      if (pending(job) && !app.activeId) track(job.id);
+      if (pending(job)) track([job]);
       historyDialog.close();
       renderOutput();
       revealOutput();
@@ -482,14 +546,14 @@ function revealOutput() {
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (app.submitting || app.activeId || !app.online) return;
+  if (app.submitting || app.activeIds.size || !app.online) return;
   const instruction = $("instruction").value.trim();
-  if (!app.selections.portrait) {
+  if (!app.selections.portrait && !app.randomSlots.has("portrait")) {
     message($("form-message"), "请先选择人像");
     openGallery("portrait");
     return;
   }
-  if (Object.keys(slots).filter((key) => app.selections[key]).length < 2 && !instruction) {
+  if (Object.keys(slots).filter((key) => app.selections[key] || app.randomSlots.has(key)).length < 2 && !instruction) {
     message($("form-message"), "请选择一项造型素材，或填写补充提示词");
     return;
   }
@@ -508,10 +572,13 @@ form.addEventListener("submit", async (event) => {
   try {
     const job = await post("/api/jobs", {
       model: form.elements.model.value, references: refs, instruction, ratio: $("ratio").value,
+      count: Number($("count").value), randomize: [...app.randomSlots],
     });
-    remember(job);
+    const jobs = job.jobs || [job];
+    remember(jobs);
     app.viewId = job.id;
-    track(job.id);
+    track(jobs);
+    if (job.warning) message($("form-message"), job.warning);
   } catch (error) {
     app.viewId = previous;
     message($("form-message"), error.message);
@@ -529,7 +596,7 @@ $("cancel").addEventListener("click", async () => {
   button.disabled = true;
   try {
     const result = await post(`/api/jobs/${id}/cancel`, {});
-    if (result.cancelled && app.activeId === id && app.viewId === id) {
+    if (result.cancelled && app.activeIds.has(id) && app.viewId === id) {
       message($("job-state"), "正在取消…");
     }
   } catch (error) {
@@ -553,12 +620,14 @@ document.querySelectorAll("dialog").forEach((dialog) => {
 });
 $("instruction").value = load("instruction", "");
 $("ratio").value = load("ratio", "原始比例");
+$("count").value = load("count", "1");
 form.elements.model.value = load("model", "qwen") === "h3-image" ? "h3-image" : "qwen";
 document.querySelectorAll(".model-picker input").forEach((radio) => {
   radio.addEventListener("change", () => save("model", form.elements.model.value));
 });
 $("instruction").addEventListener("input", () => save("instruction", $("instruction").value));
 $("ratio").addEventListener("change", () => save("ratio", $("ratio").value));
+$("count").addEventListener("change", () => save("count", $("count").value));
 
 async function defaults() {
   try {
@@ -573,8 +642,7 @@ async function defaults() {
 Object.values(app.selections).forEach(rememberUpload);
 renderReferences();
 app.viewId = app.jobs[0]?.id || null;
-const active = app.jobs.find(pending);
-if (active) track(active.id);
+track(app.jobs);
 renderOutput();
 defaults();
 checkHealth();

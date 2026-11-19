@@ -74,6 +74,12 @@
             <option value="9:16">9:16</option><option value="16:9">16:9</option>
           </select><svg aria-hidden="true"><use href="#i-down"/></svg></span>
         </label>
+        <label class="ratio-field"><span>数量</span>
+          <span class="select-wrap"><select id="count">
+            <option value="1">1 张</option><option value="2">2 张</option><option value="3">3 张</option><option value="4">4 张</option>
+            <option value="5">5 张</option><option value="6">6 张</option><option value="7">7 张</option><option value="8">8 张</option>
+          </select><svg aria-hidden="true"><use href="#i-down"/></svg></span>
+        </label>
         <button class="button primary generate" id="generate" type="submit" disabled><svg aria-hidden="true"><use href="#i-spark"/></svg><span>生成图片</span></button>
       </div>
       <p class="form-message" id="form-message" role="status" hidden></p>
@@ -93,6 +99,10 @@
           <p id="job-state" role="status"></p>
           <button class="button quiet cancel" id="cancel" type="button" hidden><svg aria-hidden="true"><use href="#i-stop"/></svg>取消任务</button>
         </div>
+      </div>
+      <div class="batch-results" id="batch-results" hidden>
+        <p id="batch-status" role="status"></p>
+        <div id="batch-thumbs" class="batch-thumbs" role="group" aria-label="本批次图片"></div>
       </div>
     </section>
   </main>
