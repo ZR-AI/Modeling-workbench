@@ -631,7 +631,7 @@ document.querySelectorAll("dialog").forEach((dialog) => {
   dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
 });
 $("instruction").value = load("instruction", "");
-$("ratio").value = load("ratio", "原始比例");
+$("ratio").value = "3:4";
 $("count").value = load("count", "1");
 form.elements.model.value = load("model", "qwen") === "h3-image" ? "h3-image" : "qwen";
 document.querySelectorAll(".model-picker input").forEach((radio) => {

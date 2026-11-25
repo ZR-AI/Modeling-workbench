@@ -6,6 +6,7 @@ import hashlib
 from io import BytesIO
 import json
 import logging
+import os
 import math
 from pathlib import Path
 import random
@@ -32,7 +33,7 @@ CUSTOM_ASSETS = COMFY / "models" / "GHIL" / "自定义"
 SLOTS = {
     "portrait": ("209", "人像", "fd2238cae24"),
     "costume": ("204", "服装", "WIN-0142"),
-    "pose": ("203", "姿势", "upper80v2_P061_side"),
+    "pose": ("203", "姿势", "live_sit_P001_front"),
     "hair": ("202", "发型", "h-f31fd3f3647"),
 }
 RATIOS = {"原始比例", "3:4", "1:1", "4:3", "9:16", "16:9"}
@@ -209,9 +210,12 @@ async def browse(request):
     rows = list((await catalog(request.app, kind)).values())
     query = request.query.get("q", "")[:100].strip().casefold().split()
     category = request.query.get("category", "")
-    categories = sorted({row["category"] for row in rows if row["category"]})
+    categories = sorted({row["category"] for row in rows if row["category"]},
+                        key=lambda name: (0 if name.startswith("直播") else 1, name))
     filtered = [row for row in rows if (not category or row["category"] == category)
                 and all(word in row["search"] for word in query)]
+    # 直播姿势永远排在最前（其余保持原顺序）
+    filtered.sort(key=lambda row: 0 if row["category"].startswith("直播") else 1)
     if request.query.get("random") == "1":
         if not filtered:
             raise ApiError(404, "没有找到素材")
@@ -383,7 +387,9 @@ async def submit(request):
     if not isinstance(model, str) or model not in TEMPLATES:
         raise ApiError(400, "请选择 Qwen 2.1 或 H3 Image")
     instruction = body.get("instruction", "")
-    ratio = body.get("ratio", "原始比例")
+    ratio = body.get("ratio", "3:4")
+    if not os.environ.get("QWEN_ALLOW_RATIO"):
+        ratio = "3:4"  # 姿态图统一 3:4，服务端强制对齐，旧页面也不会跑偏
     count = body.get("count", 1)
     parallel = body.get("parallel", False)
     randomize = body.get("randomize", [])
