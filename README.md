@@ -1,27 +1,83 @@
-# 造型工作台
+<p align="center">
+  <img src="dist/favicon.svg" width="66" height="66" alt="">
+</p>
 
-用人像、服装、姿势和发型参考图运行本机 Qwen Image 2.1 或 MiniMax H3 Image INT8 工作流。打开卡片可搜索图库、随机选择或上传参考图。在生成前选择模型，浏览器会记住最近一次选择。生成结果支持放大、下载和从当前浏览器的生成记录中重新打开。
+<h1 align="center">造型工作台</h1>
 
-图库选择窗口里的「我的图片」会保留当前浏览器上传的素材，同一张图可以在不同参考位重新选择。双击已选图片或点击右上角裁剪按钮，可拖动选框、调整大小和比例。点击「应用」后，卡片会显示裁剪预览，生成时沿用该选框。「恢复原图」后点击「应用」可清除裁剪。
+<p align="center">
+  用人像、服装、姿势和发型参考图，生成一套新造型。<br>
+  基于本地 ComfyUI，支持 Qwen Image 2.1 和 MiniMax H3 Image INT8。
+</p>
 
-每次打开或刷新页面时，四张参考卡片的「随机」开关均为关闭。开启后，每张生成图都会从对应图库重新抽取素材。关闭的类别继续使用卡片上当前选择的图片和裁剪范围。「数量」可选 1 至 8 张，结果区通过缩略图切换本批次的图片。
+<p align="center">
+  <a href="#功能">功能</a> ·
+  <a href="#素材库">素材库</a> ·
+  <a href="#快速开始">快速开始</a>
+</p>
 
-Qwen 使用固定参考素材且生成多张时，默认每组两张在同一次 GPU 采样中生成。奇数张的最后一张单独生成。取消一组并行任务会同时取消组内两张。可关闭「并行生成」改为逐张生成。开启任一素材的随机开关时继续逐张抽取并生成。当前 H3 Image 工作流的采样只接受一张，仍按顺序生成。
+<p align="center">
+  <a href="docs/images/workbench.png"><img src="docs/images/workbench.png" width="1120" alt="造型工作台界面。左侧为四类参考素材，右侧为生成的全身造型。"></a>
+</p>
 
-Qwen 根据服装、姿势和发型的组合选择预设模板，拼接补充提示词，再由本地提示词优化模型结合参考图细化。H3 根据参考图组合选择原工作流的英文模板，拼接补充提示词后直接传给条件编码节点。
+## 功能
 
-同一局域网内访问 [造型工作台](http://192.168.10.24:8190/)。在运行 ComfyUI 的电脑上也可打开 [本机地址](http://127.0.0.1:8190/)。
+| 功能 | 使用方式 |
+| --- | --- |
+| 四类参考素材 | 在人像、服装、姿势和发型库中搜索、分类筛选或随机挑选。也可上传自己的 JPG、PNG 或 WebP 图片。 |
+| 裁剪参考图 | 双击已选图片或点卡片右上角的裁剪图标，调整范围和比例。应用后，卡片和模型都使用裁剪后的图像。 |
+| 提示词 | 根据已选素材组合套用预设模板。Qwen 会结合参考图细化提示词，H3 Image 使用工作流内置的英文模板。想指定额外细节时，可填写补充提示词。 |
+| 批量生成 | 一次提交 1–8 张。Qwen 使用固定参考时可以两张一组并行采样。启用随机素材或使用 H3 Image 时逐张生成。 |
+| 预览与下载 | 通过缩略图切换批次结果，支持放大、逐张下载和在当前浏览器查询生成记录。 |
 
-主机重启后，用 `linjing` 登录本机终端或 SSH，在任意目录运行一条命令：
+每类素材的随机开关独立控制。开启后，每张结果都从对应图库重新抽取该类素材。关闭时使用卡片上的选图和裁剪。打开或刷新页面时，四个随机开关均为关闭。
 
-```bash
-~/.local/bin/start-studio
-```
+## 素材库
 
-命令会启动 ComfyUI 和网页服务，检查就绪后打印访问地址。启动的服务在命令退出后继续运行。主机优先使用 `192.168.10.24`。如果路由器重新分配了 IP，请使用命令输出的地址。入口调用 `qwen-web/start-all.sh`，日志位于 `qwen-web/.data/launcher/`。
+| 人像 | 服装 |
+| :---: | :---: |
+| <a href="docs/images/portrait-gallery.png"><img src="docs/images/portrait-gallery.png" width="440" alt="人像素材库，展示可选的正脸参考图"></a> | <a href="docs/images/costume-gallery.png"><img src="docs/images/costume-gallery.png" width="440" alt="服装素材库，展示连衣裙、套装和配饰参考图"></a> |
 
-默认网页端口是 8190。已有 ComfyUI 服务时，也可以单独运行 `./qwen-web/start.sh`，或用 `./qwen-web/start.sh --port 8191` 调整网页端口。图库包含原素材包的 8,738 项，含素材包自带的自定义分类。每位使用者可上传自己的 JPG、PNG 或 WebP 静态图片，单张上限 12 MB。任务使用同一个 ComfyUI 队列。
+| 姿势 | 发型 |
+| :---: | :---: |
+| <a href="docs/images/pose-gallery.png"><img src="docs/images/pose-gallery.png" width="440" alt="姿势素材库，展示多角度人体姿势线稿"></a> | <a href="docs/images/hair-gallery.png"><img src="docs/images/hair-gallery.png" width="440" alt="发型素材库，展示不同长度和样式的发型参考图"></a> |
 
-上传保存在 `ComfyUI/input/qwen-web/`，生成图片保存在 `ComfyUI/output/QwenWeb/`。上传列表、已选素材和裁剪设置保存在当前浏览器里。浏览器也保存最近 25 条任务编号。服务运行数据在 `qwen-web/.data/`。
+图库截图展示已安装 GHIL 素材包的界面。上传的图片会出现在当前浏览器的「我的图片」里，可在任一参考位复用。
 
-网页可由同一局域网的访问者提交计算任务，适合可信的局域网使用。
+## 快速开始
+
+**在已有的本地 ComfyUI 环境中部署。** 仓库提供网页、服务端和两套工作流配置。运行前需准备能执行对应工作流的 ComfyUI、GHIL 图库、缺失节点和模型权重。
+
+1. 在包含 `ComfyUI/` 和 Python 虚拟环境 `.venv/` 的父目录中克隆项目。
+
+   ```bash
+   git clone https://github.com/ZR-AI/Modeling-workbench.git qwen-web
+   ```
+
+   网页服务复用父目录的 `.venv`，需要 `aiohttp` 和 `Pillow`。图库从 `ComfyUI/models/GHIL/` 读取。完整工作流配置见 [Qwen](workflow.json) 和 [H3 Image](workflow-h3-image.json)。
+
+2. 启动 ComfyUI，再在父目录启动网页服务。
+
+   ```bash
+   ./qwen-web/start.sh
+   ```
+
+   在已有父目录 `start-comfyui.sh` 和用户级 systemd 的 Linux 环境中，也可运行 `./qwen-web/start-all.sh` 一次启动两个服务。
+
+3. 在服务器本机打开 [127.0.0.1:8190](http://127.0.0.1:8190/)。同一局域网的其他设备可用服务器的局域网 IP 和端口 `8190` 访问。
+
+<details>
+<summary>模型文件与数据位置</summary>
+
+| 目录（相对于 `ComfyUI/models/`） | Qwen Image 2.1 | MiniMax H3 Image INT8 |
+| --- | --- | --- |
+| `diffusion_models/` | `qwen_image_2.1_int8_convrot.safetensors` | `minimax_h3_image_pruned_int8_convrot.safetensors` |
+| `text_encoders/` | `qwen3vl_8b_int8_convrot.safetensors` | `qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors` |
+| `vae/` | `qwen_image_2.1_vae_bf16.safetensors` | `minimax_h3_image_vae_fp16.safetensors` |
+
+Qwen 的提示词优化器还需要 `models/LLM/` 中的 `Qwen-Image-2.1-PE-T2I.Q5_K_S.gguf`、`Qwen-Image-2.1-PE-I2I.Q5_K_S.gguf` 和 `Qwen-Image-2.1-PE-I2I.mmproj-bf16.gguf`，以及节点依赖的 `llama-cpp-python` 和 `diskcache`。
+
+- 上传图片（单张 ≤ 12 MB）：`ComfyUI/input/qwen-web/`
+- 生成结果：`ComfyUI/output/QwenWeb/`
+- 网页服务数据和启动日志：`qwen-web/.data/`
+
+</details>
